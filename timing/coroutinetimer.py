@@ -45,7 +45,10 @@ def time_coroutine(f):
             else:
                 log.debug("sending %r into %s", yielded, name[0])
                 with timer:
-                    future = g.send(yielded)
+                    try:
+                        future = g.send(yielded)
+                    except StopIteration as si:
+                        raise gen.Return(si.value)
             log.debug("yielding %r in %s", future, name[0])
             try:
                 yielded = yield future
@@ -90,9 +93,6 @@ class Timer(object):
         self.stop_time = time.time()
         self.runtime += self.stop_time - self.start_time
         self.start_time = None  # forces an error if we stop a Timer that has not been re/started
-
-    def getRuntime(self):
-        return self.runtime
 
     def finalize(self):
         stats_function(STAT_NAME, self.runtime, tags=["name:" + self.identifier])
