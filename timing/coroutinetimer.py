@@ -24,7 +24,6 @@ def time_coroutine(f):
     print("\n\ntime_coroutine")
     is_all(f)
 
-    @gen.coroutine
     @functools.wraps(f)
     def time_coroutine_wrapper(*args, **kwargs):
         if not name:
