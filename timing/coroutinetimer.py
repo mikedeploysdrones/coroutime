@@ -1,12 +1,13 @@
 import functools
 import inspect
+import logging
 import sys
 import time
 
 from tornado import gen
 
-import logger
-log = logger.getLogger(__name__)
+
+log = logging.getLogger(__name__)
 
 STAT_NAME = "my.coroutine.time"
 
@@ -18,8 +19,8 @@ def time_coroutine(f):
     @functools.wraps(f)
     def time_coroutine_wrapper(*args, **kwargs):
         if not name:
-            classname = utils.get_method_classname(f, args)
-            identifiers = (inspect.getmodule(f).__name__, classname or f.__name__)
+            classname = get_method_classname(f, args)
+            identifiers = filter(None, (inspect.getmodule(f).__name__, classname, f.__name__))
             identifier = ".".join(identifiers)
             name.append(identifier)
 
@@ -92,7 +93,7 @@ class Timer(object):
 def get_method_classname(method, args):
     """Retrieve a classname from a method given the method and the arguments being invoked.
 
-    This function relies on methods using the conventional "self" as the name of its first argument.
+    This function relies on methods using the conventional "self" or "cls" as the name of its first argument.
     If the given method does not turn out to be a method (i.e. it's just a function), then None is
     returned. This function is useful in decorators where we cannot determine if the function that
     has been decorated is bound to an instance.
@@ -104,12 +105,16 @@ def get_method_classname(method, args):
     Returns:
         the name of the class of the object to which method is bound, or None
     """
+    class_ = None
     argspec = inspect.getargspec(method)
-    ismethod = len(argspec) >= 1 and argspec.args[0] == 'self'
-    classname = args[0].__class__.__name__ if ismethod else None
+    ismethod = argspec.args and argspec.args[0] in ('self', 'cls')
+    if ismethod:
+        first = args[0]
+        class_ = first if inspect.isclass(first) else first.__class__
+    classname = class_ and class_.__name__
     return classname
 
 
 def stats_function(*args, **kwargs):
-    """Overwrite this with you stats logging function."""
-    pass
+    """Overwrite this with your stats logging function."""
+    print(f"{args!r} {kwargs!r}")
