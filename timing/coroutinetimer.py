@@ -21,6 +21,9 @@ def is_all(func):
 def time_coroutine(f):
     name = []  # this is an array to allow access to a nonlocal variable from a wrapper
 
+    print("\n\ntime_coroutine")
+    is_all(f)
+
     @gen.coroutine
     @functools.wraps(f)
     def time_coroutine_wrapper(*args, **kwargs):
