@@ -120,7 +120,7 @@ def get_method_classname(method, args):
         the name of the class of the object to which method is bound, or None
     """
     class_ = None
-    argspec = inspect.getargspec(method)
+    argspec = inspect.getfullargspec(method)
     ismethod = argspec.args and argspec.args[0] in ('self', 'cls')
     if ismethod:
         first = args[0]
