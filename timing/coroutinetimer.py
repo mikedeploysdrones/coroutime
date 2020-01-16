@@ -21,6 +21,7 @@ def is_all(func):
 
 def time_coroutine(f):
     if not inspect.isgeneratorfunction(f):
+        # function could be decorated as a coroutine, but isn't really a coroutine
         log.warning("Function %s is not a generator function and cannot be timed", f.__qualname__)
         return f
 
