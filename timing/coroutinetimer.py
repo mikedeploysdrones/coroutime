@@ -91,6 +91,10 @@ class Timer(object):
 
 
 def coroutime(f):
+    """A convenience decorator that can be used in place of
+    @gen.coroutine
+    @time_coroutine
+    """
     return gen.coroutine(time_coroutine(f))
 
 
