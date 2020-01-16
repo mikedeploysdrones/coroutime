@@ -8,7 +8,6 @@ from tornado import gen
 
 
 log = logging.getLogger(__name__)
-STAT_NAME = "my.coroutine.time"
 
 
 def time_coroutine(f):
