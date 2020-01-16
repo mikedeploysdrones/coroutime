@@ -90,6 +90,10 @@ class Timer(object):
         stats_function(self)
 
 
+def coroutime(f):
+    return gen.coroutine(time_coroutine(f))
+
+
 def stats_function(timer):
     """Overwrite this with your stats logging function."""
     log.debug(f"{timer.identifier} ran for {timer.runtime:.2f}")
