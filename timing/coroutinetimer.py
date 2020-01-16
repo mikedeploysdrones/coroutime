@@ -8,15 +8,7 @@ from tornado import gen
 
 
 log = logging.getLogger(__name__)
-
 STAT_NAME = "my.coroutine.time"
-
-def is_all(func):
-    print(func.__name__)
-    for is_f_name in vars(inspect):
-        if is_f_name.startswith("is") and inspect.isfunction(is_f := getattr(inspect, is_f_name)):
-            is_it = is_f(func)
-            print(f"{is_f_name}\t{is_it}")
 
 
 def time_coroutine(f):
@@ -26,9 +18,6 @@ def time_coroutine(f):
         return f
 
     name = []  # this is an array to allow access to a nonlocal variable from a wrapper
-
-    print("\n\ntime_coroutine")
-    is_all(f)
 
     @functools.wraps(f)
     def time_coroutine_wrapper(*args, **kwargs):
