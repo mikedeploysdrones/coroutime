@@ -88,9 +88,9 @@ class Timer(object):
         self.start_time = None  # forces an error if we stop a Timer that has not been re/started
 
     def finalize(self):
-        stats_function(STAT_NAME, self.runtime, tags=["name:" + self.identifier])
+        stats_function(self)
 
 
-def stats_function(*args, **kwargs):
+def stats_function(timer):
     """Overwrite this with your stats logging function."""
-    print(f"{args!r} {kwargs!r}")
+    log.debug(f"{timer.identifier} ran for {timer.runtime:.2f}")
