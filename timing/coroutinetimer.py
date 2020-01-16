@@ -22,9 +22,7 @@ def time_coroutine(f):
     @functools.wraps(f)
     def time_coroutine_wrapper(*args, **kwargs):
         if not name:
-            classname = get_method_classname(f, args)
-            identifiers = filter(None, (inspect.getmodule(f).__name__, classname, f.__name__))
-            identifier = ".".join(identifiers)
+            identifier = ".".join((inspect.getmodule(f).__name__, f.__qualname__))
             name.append(identifier)
 
         timer = Timer(name[0])
@@ -91,31 +89,6 @@ class Timer(object):
 
     def finalize(self):
         stats_function(STAT_NAME, self.runtime, tags=["name:" + self.identifier])
-
-
-def get_method_classname(method, args):
-    """Retrieve a classname from a method given the method and the arguments being invoked.
-
-    This function relies on methods using the conventional "self" or "cls" as the name of its first argument.
-    If the given method does not turn out to be a method (i.e. it's just a function), then None is
-    returned. This function is useful in decorators where we cannot determine if the function that
-    has been decorated is bound to an instance.
-
-    Args:
-        method - the function to check
-        args - the arguments that were given to the method invocation
-
-    Returns:
-        the name of the class of the object to which method is bound, or None
-    """
-    class_ = None
-    argspec = inspect.getfullargspec(method)
-    ismethod = argspec.args and argspec.args[0] in ('self', 'cls')
-    if ismethod:
-        first = args[0]
-        class_ = first if inspect.isclass(first) else first.__class__
-    classname = class_ and class_.__name__
-    return classname
 
 
 def stats_function(*args, **kwargs):
