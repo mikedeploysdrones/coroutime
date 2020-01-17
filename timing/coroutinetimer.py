@@ -1,26 +1,27 @@
 import functools
 import inspect
+import logging
 import sys
 import time
 
 from tornado import gen
 
-import logger
-log = logger.getLogger(__name__)
 
-STAT_NAME = "my.coroutine.time"
+log = logging.getLogger(__name__)
 
 
 def time_coroutine(f):
+    if not inspect.isgeneratorfunction(f):
+        # function could be decorated as a coroutine, but isn't really a coroutine
+        log.warning("Function %s is not a generator function and cannot be timed", f.__qualname__)
+        return f
+
     name = []  # this is an array to allow access to a nonlocal variable from a wrapper
 
-    @gen.coroutine
     @functools.wraps(f)
     def time_coroutine_wrapper(*args, **kwargs):
         if not name:
-            classname = utils.get_method_classname(f, args)
-            identifiers = (inspect.getmodule(f).__name__, classname or f.__name__)
-            identifier = ".".join(identifiers)
+            identifier = ".".join((inspect.getmodule(f).__name__, f.__qualname__))
             name.append(identifier)
 
         timer = Timer(name[0])
@@ -36,7 +37,10 @@ def time_coroutine(f):
             else:
                 log.debug("sending %r into %s", yielded, name[0])
                 with timer:
-                    future = g.send(yielded)
+                    try:
+                        future = g.send(yielded)
+                    except StopIteration as si:
+                        raise gen.Return(si.value)
             log.debug("yielding %r in %s", future, name[0])
             try:
                 yielded = yield future
@@ -82,34 +86,18 @@ class Timer(object):
         self.runtime += self.stop_time - self.start_time
         self.start_time = None  # forces an error if we stop a Timer that has not been re/started
 
-    def getRuntime(self):
-        return self.runtime
-
     def finalize(self):
-        stats_function(STAT_NAME, self.runtime, tags=["name:" + self.identifier])
+        stats_function(self)
 
 
-def get_method_classname(method, args):
-    """Retrieve a classname from a method given the method and the arguments being invoked.
-
-    This function relies on methods using the conventional "self" as the name of its first argument.
-    If the given method does not turn out to be a method (i.e. it's just a function), then None is
-    returned. This function is useful in decorators where we cannot determine if the function that
-    has been decorated is bound to an instance.
-
-    Args:
-        method - the function to check
-        args - the arguments that were given to the method invocation
-
-    Returns:
-        the name of the class of the object to which method is bound, or None
+def coroutime(f):
+    """A convenience decorator that can be used in place of
+    @gen.coroutine
+    @time_coroutine
     """
-    argspec = inspect.getargspec(method)
-    ismethod = len(argspec) >= 1 and argspec.args[0] == 'self'
-    classname = args[0].__class__.__name__ if ismethod else None
-    return classname
+    return gen.coroutine(time_coroutine(f))
 
 
-def stats_function(*args, **kwargs):
-    """Overwrite this with you stats logging function."""
-    pass
+def stats_function(timer):
+    """Overwrite this with your stats logging function."""
+    log.debug(f"{timer.identifier} ran for {timer.runtime:.2f}")
