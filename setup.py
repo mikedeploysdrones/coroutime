@@ -6,7 +6,7 @@ with open('LICENSE') as f:
 
 setup(
     name='coroutime',
-    version='0.1.0',
+    version='0.2.0',
     description='A package for timing Tornado coroutines',
     long_description='',
     author_email='coroutime@gmail.com',
