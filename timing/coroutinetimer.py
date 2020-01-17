@@ -49,7 +49,10 @@ def time_coroutine(f):
                 excepted = True
                 log.debug("throwing %r in %s", exc_args[1], name[0])
                 with timer:
-                    future = g.throw(*exc_args)
+                    try:
+                        future = g.throw(*exc_args)
+                    except StopIteration as si:
+                        raise gen.Return(si.value)
                 log.debug("throw returned %r in %s", future, name[0])
             else:
                 log.debug("yielded %r from %s", yielded, name[0])
